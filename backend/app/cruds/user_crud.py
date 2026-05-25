@@ -14,7 +14,7 @@ def create_user(
     db_user = user_model.User(
         name = user.name,
         email = user.email,
-        phone = user.phone,
+        phone_number = user.phone_number,
         hashed_password = hash_password(user.password)
     )
 

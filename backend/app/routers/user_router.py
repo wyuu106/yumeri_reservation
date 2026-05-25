@@ -5,7 +5,7 @@ from app.db import get_db
 from app.models import user_model
 from app.schemas import user_schema
 from app.cruds import user_crud
-from app.utils.auth import get_current_user
+from app.utils.auth import get_optional_user
 
 router = APIRouter()
 
@@ -30,7 +30,7 @@ def login(form_data: OAuth2PasswordRequestForm = Depends(), db: Session = Depend
 # ユーザー削除
 @router.delete('/users/me')
 def delete_user(
-    current_user: user_model.User = Depends(get_current_user),
+    current_user: user_model.User = Depends(get_optional_user),
     db: Session = Depends(get_db)
 ):
     user_id = current_user.id

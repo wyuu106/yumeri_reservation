@@ -17,18 +17,18 @@ class SeatPattern(Base):
     name: Mapped[str] = mapped_column(String)
     capacity: Mapped[int] = mapped_column(Integer)
 
-# 席のパターンに使われている席
+# パターンに使われている席
 class PatternMember(Base):
     __tablename__ = 'pattern_members'
 
     pattern_id: Mapped[str] = mapped_column(
         String,
-        ForeignKey('SeatPattern.id'),
+        ForeignKey('seat_patterns.id'),
         primary_key=True
         )
     
     seat_id: Mapped[str] = mapped_column(
         String,
-        ForeignKey('Seat.id'),
+        ForeignKey('seats.id'),
         primary_key=True
         )

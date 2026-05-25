@@ -54,11 +54,19 @@ def create_access_token(data: dict):
         algorithm=ALGORITHM
     )
 
+oauth2_scheme_optional = OAuth2PasswordBearer(
+    tokenUrl="login",
+    auto_error=False
+)
+
 # ログイン中のユーザーを取得
-def get_current_user(
-    token: str = Depends(oauth2_scheme),
+def get_optional_user(
+    token: str | None = Depends(oauth2_scheme_optional),
     db: Session = Depends(get_db)
 ):
+    
+    if token is None:
+        return None
 
     try:
 
@@ -71,21 +79,13 @@ def get_current_user(
         user_id = payload.get("sub")
 
     except JWTError:
-
-        raise HTTPException(
-            status_code=401,
-            detail="Invalid token"
-        )
-
+        return None
+    
     user = db.query(user_model.User).filter(
         user_model.User.id == user_id
     ).first()
-    
-    if not user:
 
-        raise HTTPException(
-            status_code=401,
-            detail="User not found"
-        )
+    if user in None:
+        return None
 
     return user

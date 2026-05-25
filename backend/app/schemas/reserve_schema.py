@@ -8,11 +8,16 @@ class ReservationCreate(BaseModel):
     phone_number: str | None = None
 
     people: int
-    kid: int | None = None
     start_at: datetime
 
 class ReservationCreateResponse(BaseModel):
     id: str
     name: str
+    people: int
     start_at: datetime
     end_at: datetime
+
+class ReservationUpdate(BaseModel):
+    reservation_id: str
+    people: int
+    start_at: datetime

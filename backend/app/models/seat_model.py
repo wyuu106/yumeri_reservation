@@ -2,6 +2,10 @@ from sqlalchemy.orm import Mapped, mapped_column
 from sqlalchemy import String, Integer, ForeignKey
 from app.db import Base
 
+'''
+マスタデータ（固定値）
+'''
+
 # 席
 class Seat(Base):
     __tablename__ = 'seats'

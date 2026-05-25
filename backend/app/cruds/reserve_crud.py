@@ -6,13 +6,13 @@ from app.schemas import reserve_schema
 
 # 予約作成
 def create_reservation(
-        current_user: user_model.User,
         data: reserve_schema.ReservationCreate,
+        current_user: user_model.User,
         db: Session
         ) -> reserve_schema.ReservationCreateResponse:
     
     # ゲストユーザーの処理
-    if current_user in None:
+    if current_user is None:
         if data.name is None:
             raise HTTPException(
                 status_code=400,
@@ -32,7 +32,7 @@ def create_reservation(
             )
         
         # それぞれのデータを入力フォームから取得
-        name = data.nema
+        name = data.name
         email = data.email
         phone_number = data.phone_number
         user_id = None
@@ -61,3 +61,56 @@ def create_reservation(
     db.refresh(db_reservation)
 
     return db_reservation
+
+# 全予約取得
+def get_all_reservations(db: Session) -> list[reserve_model.Reservation]:
+    all_reservations = db.query(reserve_model.Reservation).all()
+    return all_reservations
+
+# ユーザーごとの予約取得
+def get_reservations(user_id: str, db: Session) -> list[reserve_schema.ReservationCreateResponse]:
+    db_reservations = db.query(reserve_model.Reservation).filter(
+        reserve_model.Reservation.user_id == user_id
+    ).all()
+
+    return db_reservations
+
+# 予約変更
+def update_reservation(
+        new_data: reserve_schema.ReservationUpdate,
+        db: Session
+        ) -> reserve_schema.ReservationCreateResponse:
+    
+    db_reservation = db.query(reserve_model.Reservation).filter(
+        reserve_model.Reservation.id == new_data.reservation_id
+    ).first()
+
+    if not db_reservation:
+        raise HTTPException(status_code=404, detail="該当する予約が見つかりませんでした")
+    
+    db_reservation.people = new_data.people
+    db_reservation.start_at = new_data.start_at
+    db_reservation.end_at = new_data.start_at + timedelta(hours=2)
+
+    db.commit()
+    db.refresh(db_reservation)
+
+    return db_reservation
+
+# 予約キャンセル
+def delete_reservation(
+        reservation_id: str,
+        db: Session
+):
+    
+    db_reservation = db.query(reserve_model.Reservation).filter(
+        reserve_model.Reservation.id == reservation_id
+        ).one_or_none()
+
+    if not db_reservation:
+        raise HTTPException(status_code=404, detail="該当する予約が見つかりませんでした")
+
+    db.delete(db_reservation)
+    db.commit()
+
+    return Response(status_code=status.HTTP_204_NO_CONTENT)

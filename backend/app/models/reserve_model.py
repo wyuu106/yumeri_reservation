@@ -4,6 +4,7 @@ from uuid import uuid4
 from datetime import datetime
 from app.db import Base
 
+# 予約情報
 class Reservation(Base):
     __tablename__ = 'reservations'
 
@@ -19,6 +20,7 @@ class Reservation(Base):
 
     user_id: Mapped[str | None] = mapped_column(String, ForeignKey('users.id'), nullable=True)
 
+# 予約に使用されている席の情報
 class ReservedSeat(Base):
     __tablename__ = 'reserved_seats'
 

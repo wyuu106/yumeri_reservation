@@ -1,4 +1,5 @@
 from sqlalchemy.orm import Session
+from sqlalchemy import select
 from fastapi import Response, HTTPException, status
 from fastapi.security import OAuth2PasswordRequestForm
 from app.models import user_model, reserve_model
@@ -26,11 +27,12 @@ def create_user(
 
 # ユーザー一覧
 def get_users(db: Session) -> list[user_schema.UserCreateResponse]:
-    return db.query(user_model.User).all()
+    return db.execute(select(user_model.User)).scalars().all()
 
 # ログイン
 def login(form_data: OAuth2PasswordRequestForm, db: Session) -> dict[str, str]:
-    user = db.query(user_model.User).filter(user_model.User.id == form_data.id).first()
+    stmt = select(user_model.User).where(user_model.User.id == form_data.id)
+    user = db.execute(stmt).scalar_one_or_none()
 
     if not user:
         raise HTTPException(status_code=400, detail="ユーザーが見つかりませんでした")
@@ -49,7 +51,8 @@ def login(form_data: OAuth2PasswordRequestForm, db: Session) -> dict[str, str]:
 
 # ユーザー削除
 def delete_user(id: str, db: Session):
-    db_user = db.query(user_model.User).filter(user_model.User.id == id).one_or_none()
+    stmt = select(user_model.User).where(user_model.User.id == id)
+    db_user = db.execute(stmt).scalar_one_or_none()
 
     if not db_user:
         raise HTTPException(status_code=404, detail="該当するユーザーが見つかりませんでした")

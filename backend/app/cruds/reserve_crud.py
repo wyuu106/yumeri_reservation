@@ -1,6 +1,7 @@
 from sqlalchemy.orm import Session
+from sqlalchemy import select
 from fastapi import Response, HTTPException, status
-from datetime import timedelta
+from datetime import datetime, time, timedelta
 from app.models import user_model, reserve_model
 from app.schemas import reserve_schema
 
@@ -62,28 +63,16 @@ def create_reservation(
 
     return db_reservation
 
-# 全予約取得
-def get_all_reservations(db: Session) -> list[reserve_model.Reservation]:
-    all_reservations = db.query(reserve_model.Reservation).all()
-    return all_reservations
-
-# ユーザーごとの予約取得
-def get_reservations(user_id: str, db: Session) -> list[reserve_schema.ReservationCreateResponse]:
-    db_reservations = db.query(reserve_model.Reservation).filter(
-        reserve_model.Reservation.user_id == user_id
-    ).all()
-
-    return db_reservations
-
 # 予約変更
 def update_reservation(
         new_data: reserve_schema.ReservationUpdate,
         db: Session
         ) -> reserve_schema.ReservationCreateResponse:
     
-    db_reservation = db.query(reserve_model.Reservation).filter(
+    stmt = select(reserve_model.Reservation).where(
         reserve_model.Reservation.id == new_data.reservation_id
-    ).first()
+    )
+    db_reservation = db.execute(stmt).scalar_one_or_none()
 
     if not db_reservation:
         raise HTTPException(status_code=404, detail="該当する予約が見つかりませんでした")
@@ -103,9 +92,10 @@ def delete_reservation(
         db: Session
 ):
     
-    db_reservation = db.query(reserve_model.Reservation).filter(
+    stmt = select(reserve_model.Reservation).where(
         reserve_model.Reservation.id == reservation_id
-        ).one_or_none()
+    )
+    db_reservation = db.execute(stmt).scalar_one_or_none()
 
     if not db_reservation:
         raise HTTPException(status_code=404, detail="該当する予約が見つかりませんでした")
@@ -114,3 +104,68 @@ def delete_reservation(
     db.commit()
 
     return Response(status_code=status.HTTP_204_NO_CONTENT)
+
+# ユーザーごとの予約取得
+def get_user_reservations(
+        user_id: str, db: Session
+        ) -> list[reserve_schema.ReservationCreateResponse]:
+    
+    stmt = select(reserve_model.Reservation).where(
+        reserve_model.Reservation.user_id == user_id
+    )
+    db_reservations = db.execute(stmt).scalars().all()
+
+    return db_reservations
+
+# 特定日の予約を全て取得
+def get_reservations(date: str, db: Session) -> list[reserve_schema.ReservationData]:
+    target_date = datetime.strptime(date, "%Y-%m-%d")
+
+    day_start = datetime.combine(target_date, time(18, 0))
+    day_end = datetime.combine(target_date, time(22, 0))
+
+    stmt = (
+        select(
+            reserve_model.Reservation,
+            reserve_model.ReservedSeat.seat_id
+        )
+        .join(
+            reserve_model.ReservedSeat,
+            reserve_model.Reservation.id == reserve_model.ReservedSeat.reservation_id
+        )
+        .where(
+            reserve_model.Reservation.start_at < day_end,
+            reserve_model.Reservation.end_at > day_start
+        )
+    )
+    reservations_data = db.execute(stmt).all()
+
+    result = []
+
+    for reservation, seat_id in reservations_data:
+        result.append(
+            reserve_schema.ReservationData(
+                id = reservation.id,
+                seat_id = seat_id,
+                name = reservation.name,
+                people = reservation.people,
+                start_at = reservation.start_at,
+                end_at = reservation.end_at
+            )
+        )
+
+    return result
+
+# 該当するidの予約取得
+def get_reservation(reservation_id: str, db: Session) -> reserve_model.Reservation:
+    stmt = select(reserve_model.Reservation).where(
+        reserve_model.Reservation.id == reservation_id
+    )
+    db_reservation = db.execute(stmt).scalar_one_or_none()
+
+    return db_reservation
+
+# 全予約取得
+def get_all_reservations(db: Session) -> list[reserve_model.Reservation]:
+    all_reservations = db.execute(select(reserve_model.Reservation)).scalars().all()
+    return all_reservations

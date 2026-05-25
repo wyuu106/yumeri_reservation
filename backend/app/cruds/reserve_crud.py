@@ -53,7 +53,7 @@ def create_reservation(
         people = data.people,
         kid = data.kid,
         start_at = data.start_at,
-        end_at = data.start_at + timedelta(hours=2),
+        end_at = data.start_at + timedelta(hours=2, minites=30),
         user_id = user_id
     )
 
@@ -124,37 +124,13 @@ def get_reservations(date: str, db: Session) -> list[reserve_schema.ReservationD
     day_start = datetime.combine(target_date, time(18, 0))
     day_end = datetime.combine(target_date, time(22, 0))
 
-    stmt = (
-        select(
-            reserve_model.Reservation,
-            reserve_model.ReservedSeat.seat_id
-        )
-        .join(
-            reserve_model.ReservedSeat,
-            reserve_model.Reservation.id == reserve_model.ReservedSeat.reservation_id
-        )
-        .where(
-            reserve_model.Reservation.start_at < day_end,
-            reserve_model.Reservation.end_at > day_start
-        )
+    stmt = select(reserve_model.Reservation).where(
+        reserve_model.Reservation.start_at <= day_end,
+        reserve_model.Reservation.end_at >= day_start
     )
-    reservations_data = db.execute(stmt).all()
+    reservations = db.execute(stmt).scalars().all()
 
-    result = []
-
-    for reservation, seat_id in reservations_data:
-        result.append(
-            reserve_schema.ReservationData(
-                id = reservation.id,
-                seat_id = seat_id,
-                name = reservation.name,
-                people = reservation.people,
-                start_at = reservation.start_at,
-                end_at = reservation.end_at
-            )
-        )
-
-    return result
+    return reservations
 
 # 該当するidの予約取得
 def get_reservation(reservation_id: str, db: Session) -> reserve_model.Reservation:

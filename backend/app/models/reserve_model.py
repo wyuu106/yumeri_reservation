@@ -14,6 +14,7 @@ class Reservation(Base):
     email: Mapped[str] = mapped_column(String)
     phone_number: Mapped[str] = mapped_column(String)
 
+    pattern_id: Mapped[str] = mapped_column(String)
     people: Mapped[int] = mapped_column(Integer)
     start_at: Mapped[datetime] = mapped_column(DateTime)
     end_at: Mapped[datetime] = mapped_column(DateTime)

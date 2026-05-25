@@ -22,7 +22,7 @@ class ReservationCreateResponse(BaseModel):
 # 店用の予約情報
 class ReservationData(BaseModel):
     id: str
-    seat_id: StopIteration
+    pattern_id: StopIteration
     name: str
     people: int
     start_at: datetime

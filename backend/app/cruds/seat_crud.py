@@ -6,7 +6,7 @@ from app.models import seat_model, reserve_model
 from app.cruds import reserve_crud
 from app.utils.seat_util import get_available_patterns
 
-def get_availability(people: int, date: str, db: Session):
+def get_availability(people: int, date: str, db: Session) -> list[dict]:
     # 時間の条件で使用可能な席パターンを取得
     stmt = select(seat_model.SeatPattern).where(
         seat_model.SeatPattern.min_people <= people,

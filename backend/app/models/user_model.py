@@ -11,3 +11,5 @@ class User(Base):
     email: Mapped[str] = mapped_column(String)
     phone_number: Mapped[str] = mapped_column(String)
     hashed_password: Mapped[str] = mapped_column(String)
+
+    role: Mapped[str] = mapped_column(String, default='user')

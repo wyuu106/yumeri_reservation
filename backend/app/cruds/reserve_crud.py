@@ -63,29 +63,6 @@ def create_reservation(
 
     return db_reservation
 
-# 予約変更
-def update_reservation(
-        new_data: reserve_schema.ReservationUpdate,
-        db: Session
-        ) -> reserve_schema.ReservationCreateResponse:
-    
-    stmt = select(reserve_model.Reservation).where(
-        reserve_model.Reservation.id == new_data.reservation_id
-    )
-    db_reservation = db.execute(stmt).scalar_one_or_none()
-
-    if not db_reservation:
-        raise HTTPException(status_code=404, detail="該当する予約が見つかりませんでした")
-    
-    db_reservation.people = new_data.people
-    db_reservation.start_at = new_data.start_at
-    db_reservation.end_at = new_data.start_at + timedelta(hours=2)
-
-    db.commit()
-    db.refresh(db_reservation)
-
-    return db_reservation
-
 # 予約キャンセル
 def delete_reservation(
         reservation_id: str,
@@ -117,7 +94,7 @@ def get_user_reservations(
 
     return db_reservations
 
-# 特定日の予約を全て取得
+# 特定日の予約を全て取得（管理者用）
 def get_reservations(date: str, db: Session) -> list[reserve_schema.ReservationData]:
     target_date = datetime.strptime(date, "%Y-%m-%d")
 
@@ -132,7 +109,7 @@ def get_reservations(date: str, db: Session) -> list[reserve_schema.ReservationD
 
     return reservations
 
-# 該当するidの予約取得
+# 該当するidの予約取得（管理者用）
 def get_reservation(reservation_id: str, db: Session) -> reserve_model.Reservation:
     stmt = select(reserve_model.Reservation).where(
         reserve_model.Reservation.id == reservation_id
@@ -141,7 +118,7 @@ def get_reservation(reservation_id: str, db: Session) -> reserve_model.Reservati
 
     return db_reservation
 
-# 全予約取得
+# 全予約取得（開発者用）
 def get_all_reservations(db: Session) -> list[reserve_model.Reservation]:
     all_reservations = db.execute(select(reserve_model.Reservation)).scalars().all()
     return all_reservations

@@ -2,16 +2,18 @@ from sqlalchemy.orm import Session
 from sqlalchemy import select
 from fastapi import Response, HTTPException, status
 from datetime import datetime, time, timedelta
-from app.models import seat_model, reserve_model
-from app.cruds import reserve_crud
+from app.models import seat_model
+from app.schemas import seat_schema
 from app.utils.seat_util import get_available_patterns
 
-def get_availability(people: int, date: str, db: Session) -> list[dict]:
+def get_availability(seat_data: seat_schema.SeatData, date: str, db: Session) -> list[dict]:
     # 時間の条件で使用可能な席パターンを取得
     stmt = select(seat_model.SeatPattern).where(
-        seat_model.SeatPattern.min_people <= people,
-        seat_model.SeatPattern.max_people >= people
-    )
+        seat_model.SeatPattern.min_people <= seat_data.people,
+        seat_model.SeatPattern.max_people >= seat_data.people
+        )
+    if seat_data.type != 'any':
+        stmt = stmt.where(seat_model.SeatPattern.type == seat_data.type)
     patterns = db.execute(stmt).scalars().all()
 
     target_date = datetime.strptime(date, "%Y-%m-%d")

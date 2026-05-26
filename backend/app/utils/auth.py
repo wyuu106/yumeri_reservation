@@ -1,4 +1,5 @@
 import os
+from sqlalchemy import select
 from datetime import datetime, timedelta
 from jose import jwt
 from jose import JWTError
@@ -54,22 +55,17 @@ def create_access_token(data: dict):
         algorithm=ALGORITHM
     )
 
-oauth2_scheme_optional = OAuth2PasswordBearer(
-    tokenUrl="login",
-    auto_error=False
+oauth2_scheme = OAuth2PasswordBearer(
+    tokenUrl="/admin/login"
 )
 
-# ログイン中のユーザーを取得
-def get_optional_user(
-    token: str | None = Depends(oauth2_scheme_optional),
+# 管理者認証用
+def get_current_admin(
+    token: str = Depends(oauth2_scheme),
     db: Session = Depends(get_db)
 ):
-    
-    if token is None:
-        return None
 
     try:
-
         payload = jwt.decode(
             token,
             SECRET_KEY,
@@ -79,13 +75,19 @@ def get_optional_user(
         user_id = payload.get("sub")
 
     except JWTError:
-        return None
-    
-    user = db.query(user_model.User).filter(
+        raise HTTPException(
+            status_code=401,
+            detail="認証に失敗しました"
+        )
+
+    admin = db.execute(select(user_model.User).where(
         user_model.User.id == user_id
-    ).first()
+    )).scalar_one_or_none()
 
-    if user in None:
-        return None
+    if admin is None:
+        raise HTTPException(
+            status_code=401,
+            detail="管理者が見つかりません"
+        )
 
-    return user
+    return admin

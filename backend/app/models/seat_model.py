@@ -19,6 +19,7 @@ class SeatPattern(Base):
 
     id: Mapped[str] = mapped_column(String, primary_key=True)
     name: Mapped[str] = mapped_column(String)
+    type: Mapped[str] = mapped_column(String)
     min_people: Mapped[int] = mapped_column(Integer)
     max_people: Mapped[int] = mapped_column(Integer)
 

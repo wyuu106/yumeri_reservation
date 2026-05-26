@@ -14,8 +14,6 @@ def create_user(
     
     db_user = user_model.User(
         name = user.name,
-        email = user.email,
-        phone_number = user.phone_number,
         hashed_password = hash_password(user.password)
     )
 
@@ -57,12 +55,6 @@ def delete_user(id: str, db: Session):
     if not db_user:
         raise HTTPException(status_code=404, detail="該当するユーザーが見つかりませんでした")
     
-    db_reservations = db.query(reserve_model.Reservation).filter(
-        reserve_model.Reservation.user_id == id
-    ).all()
-
-    for db_reservation in db_reservations:
-        db.delete(db_reservation)
     db.delete(db_user)
     db.commit()
 

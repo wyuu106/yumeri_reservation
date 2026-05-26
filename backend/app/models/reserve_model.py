@@ -19,8 +19,6 @@ class Reservation(Base):
     start_at: Mapped[datetime] = mapped_column(DateTime)
     end_at: Mapped[datetime] = mapped_column(DateTime)
 
-    user_id: Mapped[str | None] = mapped_column(String, ForeignKey('users.id'), nullable=True)
-
 # 予約に使用されている席の情報
 class ReservedSeat(Base):
     __tablename__ = 'reserved_seats'

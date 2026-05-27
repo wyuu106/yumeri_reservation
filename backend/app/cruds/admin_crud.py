@@ -2,44 +2,44 @@ from sqlalchemy.orm import Session
 from sqlalchemy import select
 from fastapi import Response, HTTPException, status
 from fastapi.security import OAuth2PasswordRequestForm
-from app.models import user_model, reserve_model
-from app.schemas import user_schema
+from app.models import admin_model
+from app.schemas import admin_schema
 from app.utils.auth import hash_password, verify_password, create_access_token
 
 # ユーザー登録
-def create_user(
-        user: user_schema.UserCreate,
+def create_admin(
+        admin: admin_schema.AdminCreate,
         db: Session
-        ) -> user_schema.UserCreateResponse:
+        ) -> admin_schema.AdminCreateResponse:
     
-    db_user = user_model.User(
-        name = user.name,
-        hashed_password = hash_password(user.password)
+    db_admin = admin_model.Admin(
+        name = admin.name,
+        hashed_password = hash_password(admin.password)
     )
 
-    db.add(db_user)
+    db.add(db_admin)
     db.commit()
-    db.refresh(db_user)
+    db.refresh(db_admin)
 
-    return db_user
+    return db_admin
 
 # ユーザー一覧
-def get_users(db: Session) -> list[user_schema.UserCreateResponse]:
-    return db.execute(select(user_model.User)).scalars().all()
+def get_admins(db: Session) -> list[admin_schema.AdminCreateResponse]:
+    return db.execute(select(admin_model.Admin)).scalars().all()
 
 # ログイン
 def login(form_data: OAuth2PasswordRequestForm, db: Session) -> dict[str, str]:
-    stmt = select(user_model.User).where(user_model.User.id == form_data.id)
-    user = db.execute(stmt).scalar_one_or_none()
+    stmt = select(admin_model.Admin).where(admin_model.Admin.id == form_data.id)
+    admin = db.execute(stmt).scalar_one_or_none()
 
-    if not user:
+    if not admin:
         raise HTTPException(status_code=400, detail="ユーザーが見つかりませんでした")
 
-    if not verify_password(form_data.password, user.hashed_password):
+    if not verify_password(form_data.password, admin.hashed_password):
         raise HTTPException(status_code=400, detail="パスワードが違います")
 
     access_token = create_access_token(
-        data={"sub": str(user.id)}
+        data={"sub": str(admin.id)}
     )
 
     return {
@@ -48,14 +48,14 @@ def login(form_data: OAuth2PasswordRequestForm, db: Session) -> dict[str, str]:
     }
 
 # ユーザー削除
-def delete_user(id: str, db: Session):
-    stmt = select(user_model.User).where(user_model.User.id == id)
-    db_user = db.execute(stmt).scalar_one_or_none()
+def delete_admin(id: str, db: Session):
+    stmt = select(admin_model.Admin).where(admin_model.Admin.id == id)
+    db_admin = db.execute(stmt).scalar_one_or_none()
 
-    if not db_user:
+    if not db_admin:
         raise HTTPException(status_code=404, detail="該当するユーザーが見つかりませんでした")
     
-    db.delete(db_user)
+    db.delete(db_admin)
     db.commit()
 
     return Response(status_code=status.HTTP_204_NO_CONTENT)

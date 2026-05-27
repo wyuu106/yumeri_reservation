@@ -2,7 +2,7 @@ from sqlalchemy.orm import Session
 from sqlalchemy import select
 from fastapi import Response, HTTPException, status
 from datetime import datetime, time, timedelta
-from app.models import user_model, reserve_model
+from app.models import reserve_model
 from app.schemas import reserve_schema
 
 # 予約作成（ユーザー）

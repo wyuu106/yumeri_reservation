@@ -3,8 +3,8 @@ from sqlalchemy import String
 from uuid import uuid4
 from app.db import Base
 
-class User(Base):
-    __tablename__ = 'users'
+class Admin(Base):
+    __tablename__ = 'admins'
 
     id: Mapped[str] = mapped_column(String, Primary_Key=True, default=lambda: str(uuid4()))
     name: Mapped[str] = mapped_column(String)

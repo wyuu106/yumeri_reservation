@@ -2,10 +2,11 @@ from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
 from datetime import datetime
 from app.db import get_db
-from app.models import user_model, reserve_model
+from app.models import reserve_model
 from app.schemas import reserve_schema
 from app.cruds import reserve_crud
 from app.utils.auth import get_current_admin
+from app.models import admin_model
 
 router = APIRouter()
 
@@ -23,7 +24,7 @@ def create_admin_reservation(
     data: reserve_schema.ReservationCreate,
     end_at: datetime,
     db: Session = Depends(get_db),
-    current_admin: user_model.User = Depends(get_current_admin) #管理者認証
+    current_admin: admin_model.Admin = Depends(get_current_admin) #管理者認証
     ):
     return reserve_crud.create_admin_reservation(data, end_at, db)
 
@@ -33,7 +34,7 @@ def update_reservation(
     reservation_id: str,
     new_data: reserve_schema.ReservationUpdate,
     db: Session = Depends(get_db),
-    current_admin: user_model.User = Depends(get_current_admin) # 管理者認証
+    current_admin: admin_model.Admin = Depends(get_current_admin) # 管理者認証
 ):
     return reserve_crud.update_reservation(reservation_id, new_data, db)
 
@@ -51,7 +52,7 @@ def delete_reservation(
 def get_reservations(
     date: datetime,
     db: Session = Depends(get_db),
-    current_admin: user_model.User = Depends(get_current_admin) # 管理者認証
+    current_admin: admin_model.Admin = Depends(get_current_admin) # 管理者認証
     ):
     return reserve_crud.getreservations(date, db)
 

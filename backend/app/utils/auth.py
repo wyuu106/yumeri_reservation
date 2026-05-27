@@ -9,7 +9,7 @@ from fastapi import HTTPException
 from fastapi.security import OAuth2PasswordBearer
 from sqlalchemy.orm import Session
 from app.db import get_db
-from app.models import user_model
+from yumeri_reservation.backend.app.models import admin_model
 
 SECRET_KEY = os.getenv("SECRET_KEY")
 
@@ -72,7 +72,7 @@ def get_current_admin(
             algorithms=[ALGORITHM]
         )
 
-        user_id = payload.get("sub")
+        admin_id = payload.get("sub")
 
     except JWTError:
         raise HTTPException(
@@ -80,8 +80,8 @@ def get_current_admin(
             detail="認証に失敗しました"
         )
 
-    admin = db.execute(select(user_model.User).where(
-        user_model.User.id == user_id
+    admin = db.execute(select(admin_model.Admin).where(
+        admin_model.Admin.id == admin_id
     )).scalar_one_or_none()
 
     if admin is None:

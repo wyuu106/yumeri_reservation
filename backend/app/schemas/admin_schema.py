@@ -1,10 +1,10 @@
 from pydantic import BaseModel
 
-class UserCreate(BaseModel):
+class AdminCreate(BaseModel):
     name: str
     password: str
 
-class UserCreateResponse(BaseModel):
+class AdminCreateResponse(BaseModel):
     id: str
     name: str
 

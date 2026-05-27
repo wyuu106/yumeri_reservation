@@ -30,7 +30,7 @@ class ReservationCreateResponse(BaseModel):
 # 店用の予約情報
 class ReservationData(BaseModel):
     id: str
-    pattern_id: str
+    pattern_id: int
     name: str
     people: int
     start_at: datetime
@@ -38,7 +38,7 @@ class ReservationData(BaseModel):
 
 # 予約変更の入力データ
 class ReservationUpdate(BaseModel):
-    pattern_id: str
+    pattern_id: int
     people: int
     start_at: datetime
     end_at: datetime

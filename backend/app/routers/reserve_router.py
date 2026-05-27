@@ -1,8 +1,7 @@
 from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
-from datetime import datetime
+from datetime import date, datetime
 from app.db import get_db
-from app.models import reserve_model
 from app.schemas import reserve_schema
 from app.cruds import reserve_crud
 from app.utils.auth import get_current_admin
@@ -13,11 +12,20 @@ router = APIRouter()
 # 人数、時間、席の条件　から　予約可能な時間帯を返す
 @router.get('/availability', response_model = list[dict])
 def get_availability(
-    data1: reserve_schema.ReservationCreate1,
-    date: str,
+    people: int,
+    kids: int,
+    seat_type: str,
+    is_private: bool,
+    date: date,
     db: Session = Depends(get_db)
     ):
-    return reserve_crud.get_availability(data1, date, db)
+    data = reserve_schema.ReservationCreate1(
+        people = people,
+        kids = kids,
+        seat_type = seat_type,
+        is_private = is_private
+    )
+    return reserve_crud.get_availability(data, date, db)
 
 # 予約作成（ユーザー）
 @router.post('/reservations', response_model = reserve_schema.ReservationCreateResponse)
@@ -68,6 +76,6 @@ def get_reservations(
     return reserve_crud.get_reservations(date, db)
 
 # 全予約取得（開発者用）
-@router.get('/all_reservations', response_model = list[reserve_model.Reservation])
+@router.get('/all_reservations', response_model = list[reserve_schema.ReservationData])
 def get_all_reservations(db: Session = Depends(get_db)):
     return reserve_crud.get_all_reservations(db)

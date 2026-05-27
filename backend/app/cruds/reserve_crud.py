@@ -1,7 +1,7 @@
 from sqlalchemy.orm import Session
 from sqlalchemy import select
 from fastapi import Response, HTTPException, status
-from datetime import datetime, time, timedelta
+from datetime import date, datetime, time, timedelta
 from app.models import reserve_model
 from app.schemas import reserve_schema
 from app.utils.seat_util import get_candidate_patterns, get_available_patterns, assign_pattern
@@ -9,16 +9,15 @@ from app.utils.seat_util import get_candidate_patterns, get_available_patterns, 
 # 人数、時間、席の条件　から　予約可能な時間帯を返す
 def get_availability(
         data: reserve_schema.ReservationCreate1,
-        date: str,
+        date: date,
         db: Session
         ) -> list[reserve_schema.AvailabilityResponse]:
     
     # 予約条件に合った席パターンを取得
     patterns = get_candidate_patterns(data, db)
 
-    target_date = datetime.strptime(date, "%Y-%m-%d")
-    day_start = datetime.combine(target_date, time(18, 0))
-    day_end = datetime.combine(target_date, time(22, 0))
+    day_start = datetime.combine(date, time(18, 0))
+    day_end = datetime.combine(date, time(22, 0))
 
     if data.people <= 2:
         seat_time = timedelta(hours=2)
@@ -160,11 +159,9 @@ def delete_reservation(reservation_id: str, phone_number: str, db: Session):
     return Response(status_code=status.HTTP_204_NO_CONTENT)
 
 # 特定日の予約を全て取得（管理者用）
-def get_reservations(date: str, db: Session) -> list[reserve_schema.ReservationData]:
-    target_date = datetime.strptime(date, "%Y-%m-%d")
-
-    day_start = datetime.combine(target_date, time(18, 0))
-    day_end = datetime.combine(target_date, time(22, 0))
+def get_reservations(date: date, db: Session) -> list[reserve_schema.ReservationData]:
+    day_start = datetime.combine(date, time(18, 0))
+    day_end = datetime.combine(date, time(22, 0))
 
     stmt = select(reserve_model.Reservation).where(
         reserve_model.Reservation.start_at <= day_end,
@@ -184,6 +181,6 @@ def get_reservation(reservation_id: str, db: Session) -> reserve_model.Reservati
     return db_reservation
 
 # 全予約取得（開発者用）
-def get_all_reservations(db: Session) -> list[reserve_model.Reservation]:
+def get_all_reservations(db: Session) -> list[reserve_schema.ReservationData]:
     all_reservations = db.execute(select(reserve_model.Reservation)).scalars().all()
     return all_reservations

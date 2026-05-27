@@ -1,5 +1,5 @@
 from sqlalchemy.orm import Mapped, mapped_column
-from sqlalchemy import String, Integer, Boolean, DateTime, ForeignKey
+from sqlalchemy import String, Integer, DateTime, ForeignKey
 from typing import Optional
 from uuid import uuid4
 from datetime import datetime
@@ -19,22 +19,5 @@ class Reservation(Base):
 
     people: Mapped[int] = mapped_column(Integer)
     kids: Mapped[int] = mapped_column(Integer)
-    start_at: Mapped[datetime] = mapped_column(DateTime, timezone=True)
-    end_at: Mapped[datetime] = mapped_column(DateTime, timezone=True)
-
-# 予約に使用されている席の情報
-class ReservedSeat(Base):
-    __tablename__ = 'reserved_seats'
-
-    reservation_id: Mapped[str] = mapped_column(
-        String,
-        ForeignKey('reservations.id'),
-        primary_key=True
-        )
-    
-    seat_id: Mapped[str] = mapped_column(
-        String,
-        ForeignKey('seats.id'),
-        primary_key=True
-        )
-    
+    start_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
+    end_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))

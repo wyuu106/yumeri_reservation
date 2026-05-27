@@ -10,14 +10,14 @@ from app.db import Base
 class Seat(Base):
     __tablename__ = 'seats'
 
-    id: Mapped[str] = mapped_column(String, primary_key=True)
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
     name: Mapped[str] = mapped_column(String)
 
 # 使用できる席（組み合わせを含む）
 class SeatPattern(Base):
     __tablename__ = 'seat_patterns'
 
-    id: Mapped[str] = mapped_column(String, primary_key=True)
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
     name: Mapped[str] = mapped_column(String)
     seat_type: Mapped[str] = mapped_column(String)
     is_private: Mapped[bool] = mapped_column(Boolean)
@@ -28,14 +28,14 @@ class SeatPattern(Base):
 class PatternMember(Base):
     __tablename__ = 'pattern_members'
 
-    pattern_id: Mapped[str] = mapped_column(
-        String,
+    pattern_id: Mapped[int] = mapped_column(
+        Integer,
         ForeignKey('seat_patterns.id'),
         primary_key=True
         )
     
-    seat_id: Mapped[str] = mapped_column(
-        String,
+    seat_id: Mapped[int] = mapped_column(
+        Integer,
         ForeignKey('seats.id'),
         primary_key=True
         )

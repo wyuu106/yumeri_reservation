@@ -12,12 +12,18 @@ def get_candidate_patterns(
         db: Session
         ):
     
+    # 人数から席の候補を取得
     stmt = select(SeatPattern).where(
         SeatPattern.min_people <= data.people,
         SeatPattern.max_people >= data.people
         )
+    # 子供がいる場合
+    if data.kids > 0:
+        stmt = stmt.where(SeatPattern.seat_type == 'tatami')
+    # 席のtypeの指定がある場合
     if data.seat_type != 'any':
         stmt = stmt.where(SeatPattern.seat_type == data.seat_type)
+    # 個室希望の場合
     if data.is_private:
         stmt = stmt.where(SeatPattern.is_private == True)
     

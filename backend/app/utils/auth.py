@@ -1,3 +1,4 @@
+from dotenv import load_dotenv
 import os
 from sqlalchemy import select
 from datetime import datetime, timedelta, timezone
@@ -11,9 +12,15 @@ from sqlalchemy.orm import Session
 from app.db import get_db
 from app.models import admin_model
 
+load_dotenv()
+
 SECRET_KEY = os.getenv("SECRET_KEY")
 
 ALGORITHM = "HS256"
+
+oauth2_scheme = OAuth2PasswordBearer(
+    tokenUrl="/admin/login"
+)
 
 pwd_context = CryptContext(
     schemes=["bcrypt"],
@@ -39,10 +46,11 @@ def create_access_token(data: dict):
 
     to_encode = data.copy()
 
-    expire = datetime.now(timezone.utc) + timedelta(days=1)
+    expire = datetime.now(timezone.utc) + timedelta(hours=6)
 
     to_encode.update({
-        "exp": expire
+        "exp": expire,
+        "sub": str(data["sub"])
     })
 
     return jwt.encode(
@@ -50,10 +58,6 @@ def create_access_token(data: dict):
         SECRET_KEY,
         algorithm=ALGORITHM
     )
-
-oauth2_scheme = OAuth2PasswordBearer(
-    tokenUrl="/admin/login"
-)
 
 # 管理者認証用
 def get_current_admin(

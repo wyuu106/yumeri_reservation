@@ -1,5 +1,6 @@
 from sqlalchemy.orm import Mapped, mapped_column
-from sqlalchemy import String, Integer, DateTime, ForeignKey
+from sqlalchemy import String, Integer, Boolean, DateTime, ForeignKey
+from typing import Optional
 from uuid import uuid4
 from datetime import datetime
 from app.db import Base
@@ -11,11 +12,15 @@ class Reservation(Base):
     id: Mapped[str] = mapped_column(String, primary_key=True, default=lambda: str(uuid4()))
 
     name: Mapped[str] = mapped_column(String)
-    email: Mapped[str] = mapped_column(String)
-    phone_number: Mapped[str] = mapped_column(String)
+    email: Mapped[Optional[str]] = mapped_column(String, nullable=True)
+    phone_number: Mapped[Optional[str]] = mapped_column(String, nullable=True)
 
     pattern_id: Mapped[str] = mapped_column(String)
+    type: Mapped[str] = mapped_column(String)
+    is_private: Mapped[bool] = mapped_column(Boolean)
+
     people: Mapped[int] = mapped_column(Integer)
+    kids: Mapped[int] = mapped_column(Integer)
     start_at: Mapped[datetime] = mapped_column(DateTime)
     end_at: Mapped[datetime] = mapped_column(DateTime)
 

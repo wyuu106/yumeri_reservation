@@ -4,33 +4,87 @@ from fastapi import Response, HTTPException, status
 from datetime import datetime, time, timedelta
 from app.models import reserve_model
 from app.schemas import reserve_schema
+from app.utils.seat_util import get_candidate_patterns, get_available_patterns, assign_pattern
+
+# 人数、時間、席の条件　から　予約可能な時間帯を返す
+def get_availability(
+        data: reserve_schema.ReservationCreate1,
+        date: str,
+        db: Session
+        ) -> list[dict]:
+    
+    # 予約条件に合った席パターンを取得
+    patterns = get_candidate_patterns(data, db)
+
+    target_date = datetime.strptime(date, "%Y-%m-%d")
+    day_start = datetime.combine(target_date, time(18, 0))
+    day_end = datetime.combine(target_date, time(22, 0))
+
+    if data.peope <= 2:
+        seat_time = timedelta(hours=2)
+    else:
+        seat_time = timedelta(hours=2, minutes=30)
+
+    t = day_start
+
+    results = []
+
+    # 15分ごとに、予約の可否を判定
+    while t < day_end:
+        start_at = t
+        end_at = t + seat_time
+
+        # patternsの中から、その時間帯に使える席パターンを取得
+        available_patterns = get_available_patterns(
+            patterns = patterns,
+            start_at = start_at,
+            end_at = end_at,
+            db = db
+        )
+        
+        results.append({
+            "time": start_at.strftime("%H:%M"),
+            "available": len(available_patterns) > 0 # 使える席が１つでもあればTrue
+        })
+
+        t += timedelta(minutes=15)
+
+    return results
 
 # 予約作成（ユーザー）
 def create_reservation(
-        data: reserve_schema.ReservationCreate,
+        data1: reserve_schema.ReservationCreate1,
+        data2: reserve_schema.ReservationCreate2,
         db: Session
         ) -> reserve_schema.ReservationCreateResponse:
     
-    if data.name is None:
+    if data2.name is None:
         raise HTTPException(status_code=400, detail="予約名が未入力です")
 
-    if data.email is None:
+    if data2.email is None:
         raise HTTPException(status_code=400, detail="メールアドレスが未入力です")
 
-    if data.phone_number is None:
+    if data2.phone_number is None:
         raise HTTPException(status_code=400, detail="電話番号が未入力です")
     
-    if data.peope <= 2:
-        end_at = data.start_at + timedelta(hours=2)
+    if data1.people <= 2:
+        end_at = data2.start_at + timedelta(hours=2)
     else:
-        end_at = data.start_at + timedelta(hours=2, minutes=30)
+        end_at = data2.start_at + timedelta(hours=2, minutes=30)
+
+    # 選ばれた時間で席を割り当てる
+    pattern_id = assign_pattern(data1, data2.start_at, end_at, db)
 
     db_reservation = reserve_model.Reservation(
-        name = data.name,
-        email = data.email,
-        phone_number = data.phone_number,
-        people = data.people,
-        start_at = data.start_at,
+        name = data2.name,
+        email = data2.email,
+        phone_number = data2.phone_number,
+        pattern_id = pattern_id,
+        type = data1.type,
+        is_private = data1.is_private,
+        people = data1.people,
+        kids = data1.kids,
+        start_at = data1.start_at,
         end_at = end_at
     )
 

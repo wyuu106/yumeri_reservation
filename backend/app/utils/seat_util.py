@@ -3,6 +3,26 @@ from sqlalchemy import select
 from sqlalchemy.orm import Session
 from app.models.reserve_model import Reservation
 from app.models.seat_model import SeatPattern, PatternMember
+from app.schemas.reserve_schema import ReservationCreate1
+
+# 予約条件に合った席パターンを取得
+def get_candidate_patterns(
+        data: ReservationCreate1,
+        db: Session
+        ):
+    
+    stmt = select(SeatPattern).where(
+        SeatPattern.min_people <= data.people,
+        SeatPattern.max_people >= data.people
+        )
+    if data.type != 'any':
+        stmt = stmt.where(SeatPattern.type == data.type)
+    if data.is_private:
+        stmt = stmt.where(SeatPattern.is_private == True)
+    
+    patterns = db.execute(stmt).scalars().all()
+
+    return patterns
 
 # patternsの中から、その時間帯に使える席パターンを返す
 def get_available_patterns(
@@ -10,7 +30,8 @@ def get_available_patterns(
         start_at: datetime,
         end_at: datetime,
         db: Session
-):
+        ):
+    
     available_patterns = []
 
     # 使用可能な席パターンを１つずつ判定
@@ -42,3 +63,16 @@ def get_available_patterns(
             available_patterns.append(pattern)
 
     return available_patterns
+
+def assign_pattern(
+        data: ReservationCreate1,
+        start_at: datetime,
+        end_at: datetime,
+        db: Session
+        ):
+    
+    patterns = get_candidate_patterns(data, db)
+
+    available_patterns = get_available_patterns(patterns, start_at, end_at, db)
+
+    return available_patterns[0].id

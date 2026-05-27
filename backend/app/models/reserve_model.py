@@ -15,14 +15,12 @@ class Reservation(Base):
     email: Mapped[Optional[str]] = mapped_column(String, nullable=True)
     phone_number: Mapped[Optional[str]] = mapped_column(String, nullable=True)
 
-    pattern_id: Mapped[str] = mapped_column(String)
-    type: Mapped[str] = mapped_column(String)
-    is_private: Mapped[bool] = mapped_column(Boolean)
+    pattern_id: Mapped[str] = mapped_column(String, ForeignKey('seat_patterns.id'))
 
     people: Mapped[int] = mapped_column(Integer)
     kids: Mapped[int] = mapped_column(Integer)
-    start_at: Mapped[datetime] = mapped_column(DateTime)
-    end_at: Mapped[datetime] = mapped_column(DateTime)
+    start_at: Mapped[datetime] = mapped_column(DateTime, timezone=True)
+    end_at: Mapped[datetime] = mapped_column(DateTime, timezone=True)
 
 # 予約に使用されている席の情報
 class ReservedSeat(Base):

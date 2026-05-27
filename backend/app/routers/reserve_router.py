@@ -10,23 +10,34 @@ from app.models import admin_model
 
 router = APIRouter()
 
+# 人数、時間、席の条件　から　予約可能な時間帯を返す
+@router.get('/availability', response_model = list[dict])
+def get_availability(
+    data1: reserve_schema.ReservationCreate1,
+    date: str,
+    db: Session = Depends(get_db)
+    ):
+    return reserve_crud.get_availability(data1, date, db)
+
 # 予約作成（ユーザー）
 @router.post('/reservations', response_model = reserve_schema.ReservationCreateResponse)
 def create_reservation(
-    data: reserve_schema.ReservationCreate,
+    data1: reserve_schema.ReservationCreate1,
+    data2: reserve_schema.ReservationCreate2,
     db: Session = Depends(get_db)
-):
-    return reserve_crud.create_reservation(data, db)
+    ):
+    return reserve_crud.create_reservation(data1, data2, db)
 
 # 予約作成（管理者用）
 @router.post('/admin/reservations', response_model = reserve_schema.ReservationData)
 def create_admin_reservation(
-    data: reserve_schema.ReservationCreate,
+    data1: reserve_schema.ReservationCreate1,
+    data2: reserve_schema.ReservationCreate2,
     end_at: datetime,
     db: Session = Depends(get_db),
     current_admin: admin_model.Admin = Depends(get_current_admin) #管理者認証
     ):
-    return reserve_crud.create_admin_reservation(data, end_at, db)
+    return reserve_crud.create_admin_reservation(data1, data2, end_at, db)
 
 # 予約更新
 @router.put('/admin/reservations/{reservation_id}', response_model = reserve_schema.ReservationData)
@@ -50,13 +61,13 @@ def delete_reservation(
 # その日の予約取得（管理者用）
 @router.get('/admin/reservations/day', response_model = list[reserve_schema.ReservationData])
 def get_reservations(
-    date: datetime,
+    date: str,
     db: Session = Depends(get_db),
     current_admin: admin_model.Admin = Depends(get_current_admin) # 管理者認証
     ):
-    return reserve_crud.getreservations(date, db)
+    return reserve_crud.get_reservations(date, db)
 
 # 全予約取得（開発者用）
-@router.get('/all_reservations', response_model = reserve_model.Reservation)
+@router.get('/all_reservations', response_model = list[reserve_model.Reservation])
 def get_all_reservations(db: Session = Depends(get_db)):
     return reserve_crud.get_all_reservations(db)

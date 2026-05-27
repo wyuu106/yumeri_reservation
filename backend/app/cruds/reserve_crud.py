@@ -11,7 +11,7 @@ def get_availability(
         data: reserve_schema.ReservationCreate1,
         date: str,
         db: Session
-        ) -> list[dict]:
+        ) -> list[reserve_schema.AvailabilityResponse]:
     
     # 予約条件に合った席パターンを取得
     patterns = get_candidate_patterns(data, db)
@@ -20,7 +20,7 @@ def get_availability(
     day_start = datetime.combine(target_date, time(18, 0))
     day_end = datetime.combine(target_date, time(22, 0))
 
-    if data.peope <= 2:
+    if data.people <= 2:
         seat_time = timedelta(hours=2)
     else:
         seat_time = timedelta(hours=2, minutes=30)
@@ -42,10 +42,12 @@ def get_availability(
             db = db
         )
         
-        results.append({
-            "time": start_at.strftime("%H:%M"),
-            "available": len(available_patterns) > 0 # 使える席が１つでもあればTrue
-        })
+        results.append(
+            reserve_schema.AvailabilityResponse(
+                time = start_at.strftime("%H:%M"),
+                available = len(available_patterns) > 0 # 使える席が１つでもあればTrue
+            )
+        )
 
         t += timedelta(minutes=15)
 
@@ -80,11 +82,9 @@ def create_reservation(
         email = data2.email,
         phone_number = data2.phone_number,
         pattern_id = pattern_id,
-        type = data1.type,
-        is_private = data1.is_private,
         people = data1.people,
         kids = data1.kids,
-        start_at = data1.start_at,
+        start_at = data2.start_at,
         end_at = end_at
     )
 
@@ -96,20 +96,21 @@ def create_reservation(
 
 # 予約作成（管理者用）
 def create_admin_reservation(
-        data: reserve_schema.ReservationCreate,
+        data1: reserve_schema.ReservationCreate1,
+        data2: reserve_schema.ReservationCreate2,
         end_at: datetime,
         db: Session
         ) -> reserve_schema.ReservationData:
     
-    if data.name is None:
+    if data2.name is None:
         raise HTTPException(status_code=400, detail="予約名が未入力です")
     
     db_reservation = reserve_model.Reservation(
-        name = data.name,
-        email = data.email,
-        phone_number = data.phone_number,
-        people = data.people,
-        start_at = data.start_at,
+        name = data2.name,
+        email = data2.email,
+        phone_number = data2.phone_number,
+        people = data1.people,
+        start_at = data2.start_at,
         end_at = end_at
     )
 
@@ -129,7 +130,7 @@ def update_reservation(
     stmt = select(reserve_model.Reservation).where(
         reserve_model.Reservation.id == reservation_id
     )
-    db_reservation = db.execute(stmt)
+    db_reservation = db.execute(stmt).scalar_one_or_none()
 
     db_reservation.pattern_id = new_data.pattern_id
     db_reservation.people = new_data.people

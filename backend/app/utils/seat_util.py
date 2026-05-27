@@ -1,6 +1,7 @@
-from datetime import datetime, time, timedelta
+from datetime import datetime
 from sqlalchemy import select
 from sqlalchemy.orm import Session
+from fastapi import HTTPException
 from app.models.reserve_model import Reservation
 from app.models.seat_model import SeatPattern, PatternMember
 from app.schemas.reserve_schema import ReservationCreate1
@@ -15,8 +16,8 @@ def get_candidate_patterns(
         SeatPattern.min_people <= data.people,
         SeatPattern.max_people >= data.people
         )
-    if data.type != 'any':
-        stmt = stmt.where(SeatPattern.type == data.type)
+    if data.seat_type != 'any':
+        stmt = stmt.where(SeatPattern.seat_type == data.seat_type)
     if data.is_private:
         stmt = stmt.where(SeatPattern.is_private == True)
     
@@ -74,5 +75,8 @@ def assign_pattern(
     patterns = get_candidate_patterns(data, db)
 
     available_patterns = get_available_patterns(patterns, start_at, end_at, db)
+
+    if not available_patterns:
+        raise HTTPException(status_code=400, detail="予約可能な席がありません")
 
     return available_patterns[0].id

@@ -1,6 +1,6 @@
 import os
 from sqlalchemy import select
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from jose import jwt
 from jose import JWTError
 from passlib.context import CryptContext
@@ -9,7 +9,7 @@ from fastapi import HTTPException
 from fastapi.security import OAuth2PasswordBearer
 from sqlalchemy.orm import Session
 from app.db import get_db
-from yumeri_reservation.backend.app.models import admin_model
+from app.models import admin_model
 
 SECRET_KEY = os.getenv("SECRET_KEY")
 
@@ -18,10 +18,6 @@ ALGORITHM = "HS256"
 pwd_context = CryptContext(
     schemes=["bcrypt"],
     deprecated="auto"
-)
-
-oauth2_scheme = OAuth2PasswordBearer(
-    tokenUrl="login"
 )
 
 # パスワードのハッシュ化
@@ -43,7 +39,7 @@ def create_access_token(data: dict):
 
     to_encode = data.copy()
 
-    expire = datetime.utcnow() + timedelta(days=1)
+    expire = datetime.now(timezone.utc) + timedelta(days=1)
 
     to_encode.update({
         "exp": expire
@@ -87,7 +83,7 @@ def get_current_admin(
     if admin is None:
         raise HTTPException(
             status_code=401,
-            detail="管理者が見つかりません"
+            detail="認証に失敗しました"
         )
 
     return admin

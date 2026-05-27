@@ -4,8 +4,13 @@ from datetime import datetime
 # 予約作成の入力データ１
 class ReservationCreate1(BaseModel):
     people: int
-    type: str
+    kids: int
+    seat_type: str
     is_private: bool
+
+class AvailabilityResponse(BaseModel):
+    time: str
+    available: bool
 
 # 予約作成の入力データ２
 class ReservationCreate2(BaseModel):

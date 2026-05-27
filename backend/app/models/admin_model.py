@@ -6,6 +6,6 @@ from app.db import Base
 class Admin(Base):
     __tablename__ = 'admins'
 
-    id: Mapped[str] = mapped_column(String, Primary_Key=True, default=lambda: str(uuid4()))
-    name: Mapped[str] = mapped_column(String)
+    id: Mapped[str] = mapped_column(String, primary_key=True, default=lambda: str(uuid4()))
+    name: Mapped[str] = mapped_column(String, unique=True)
     hashed_password: Mapped[str] = mapped_column(String)

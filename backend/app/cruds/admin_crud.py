@@ -29,14 +29,11 @@ def get_admins(db: Session) -> list[admin_schema.AdminCreateResponse]:
 
 # ログイン
 def login(form_data: OAuth2PasswordRequestForm, db: Session) -> dict[str, str]:
-    stmt = select(admin_model.Admin).where(admin_model.Admin.id == form_data.id)
+    stmt = select(admin_model.Admin).where(admin_model.Admin.name == form_data.username)
     admin = db.execute(stmt).scalar_one_or_none()
 
-    if not admin:
-        raise HTTPException(status_code=400, detail="ユーザーが見つかりませんでした")
-
-    if not verify_password(form_data.password, admin.hashed_password):
-        raise HTTPException(status_code=400, detail="パスワードが違います")
+    if not (admin or verify_password(form_data.password, admin.hashed_password)):
+        raise HTTPException(status_code=400, detail="IDまたはパスワードが違います")
 
     access_token = create_access_token(
         data={"sub": str(admin.id)}

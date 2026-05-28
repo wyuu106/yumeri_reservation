@@ -15,7 +15,7 @@ class Reservation(Base):
     email: Mapped[Optional[str]] = mapped_column(String, nullable=True)
     phone_number: Mapped[Optional[str]] = mapped_column(String, nullable=True)
 
-    pattern_id: Mapped[str] = mapped_column(String, ForeignKey('seat_patterns.id'))
+    pattern_name: Mapped[str] = mapped_column(String, ForeignKey('seat_patterns.id'))
 
     people: Mapped[int] = mapped_column(Integer)
     kids: Mapped[int] = mapped_column(Integer)

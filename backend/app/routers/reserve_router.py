@@ -10,7 +10,7 @@ from app.models import admin_model
 router = APIRouter()
 
 # 人数、時間、席の条件　から　予約可能な時間帯を返す
-@router.get('/availability', response_model = list[dict])
+@router.get('/availability', response_model = list[reserve_schema.AvailabilityResponse])
 def get_availability(
     people: int,
     kids: int,
@@ -69,7 +69,7 @@ def delete_reservation(
 # その日の予約取得（管理者用）
 @router.get('/admin/reservations/day', response_model = list[reserve_schema.ReservationData])
 def get_reservations(
-    date: str,
+    date: date,
     db: Session = Depends(get_db),
     current_admin: admin_model.Admin = Depends(get_current_admin) # 管理者認証
     ):
@@ -77,5 +77,8 @@ def get_reservations(
 
 # 全予約取得（開発者用）
 @router.get('/all_reservations', response_model = list[reserve_schema.ReservationData])
-def get_all_reservations(db: Session = Depends(get_db)):
+def get_all_reservations(
+    db: Session = Depends(get_db),
+    current_admin: admin_model.Admin = Depends(get_current_admin) # 管理者認証
+    ):
     return reserve_crud.get_all_reservations(db)

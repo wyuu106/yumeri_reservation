@@ -16,7 +16,7 @@ def get_candidate_patterns(
     stmt = select(SeatPattern).where(
         SeatPattern.min_people <= data.people,
         SeatPattern.max_people >= data.people
-        )
+        ).order_by(SeatPattern.max_people)
     # 子供がいる場合
     if data.kids > 0:
         stmt = stmt.where(SeatPattern.seat_type == 'tatami')
@@ -85,4 +85,4 @@ def assign_pattern(
     if not available_patterns:
         raise HTTPException(status_code=400, detail="予約可能な席がありません")
 
-    return available_patterns[0].id
+    return available_patterns[0].name

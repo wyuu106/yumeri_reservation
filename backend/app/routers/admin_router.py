@@ -14,7 +14,7 @@ router = APIRouter()
 def create_admin(
     admin: admin_schema.AdminCreate,
     db: Session = Depends(get_db),
-    #current_admin: admin_model.Admin = Depends(get_current_admin)
+    current_admin: admin_model.Admin = Depends(get_current_admin)
     ):
     return admin_crud.create_admin(admin, db)
 
@@ -22,7 +22,7 @@ def create_admin(
 @router.get('/admins', response_model = list[admin_schema.AdminCreateResponse])
 def get_admins(
     db: Session = Depends(get_db),
-    #current_admin: admin_model.Admin = Depends(get_current_admin)
+    current_admin: admin_model.Admin = Depends(get_current_admin)
     ):
     return admin_crud.get_admins(db)
 

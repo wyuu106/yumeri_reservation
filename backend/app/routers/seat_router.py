@@ -27,7 +27,7 @@ def create_seat(
 
 # 席パターン作成
 @router.post('/admin/patterns', response_model = SeatPatternCreate)
-def create_seat(
+def create_pattern(
     pattern_data: SeatPatternCreate,
     db: Session = Depends(get_db),
     current_admin: Admin = Depends(get_current_admin)
@@ -49,7 +49,7 @@ def create_seat(
 
 # 席パターンに使われている席作成
 @router.post('/admin/members', response_model = PatternMemberCreate)
-def create_seat(
+def create_member(
     member_data: PatternMemberCreate,
     db: Session = Depends(get_db),
     current_admin: Admin = Depends(get_current_admin)
@@ -72,12 +72,12 @@ def get_seats(db: Session = Depends(get_db), current_admin: Admin = Depends(get_
 
 # 席パターン取得
 @router.get('/admin/patterns', response_model = list[SeatPatternCreate])
-def get_seats(db: Session = Depends(get_db), current_admin: Admin = Depends(get_current_admin)):
+def get_patterns(db: Session = Depends(get_db), current_admin: Admin = Depends(get_current_admin)):
     return db.execute(select(SeatPattern)).scalars().all()
 
 # 席パターンに使われている席情報取得
 @router.get('/admin/members', response_model = list[PatternMemberCreate])
-def get_seats(db: Session = Depends(get_db), current_admin: Admin = Depends(get_current_admin)):
+def get_members(db: Session = Depends(get_db), current_admin: Admin = Depends(get_current_admin)):
     return db.execute(select(PatternMember)).scalars().all()
 
 # 席削除

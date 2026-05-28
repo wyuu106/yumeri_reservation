@@ -74,13 +74,13 @@ def create_reservation(
         end_at = data2.start_at + timedelta(hours=2, minutes=30)
 
     # 選ばれた時間で席を割り当てる
-    pattern_id = assign_pattern(data1, data2.start_at, end_at, db)
+    pattern_name = assign_pattern(data1, data2.start_at, end_at, db)
 
     db_reservation = reserve_model.Reservation(
         name = data2.name,
         email = data2.email,
         phone_number = data2.phone_number,
-        pattern_id = pattern_id,
+        pattern_name = pattern_name,
         people = data1.people,
         kids = data1.kids,
         start_at = data2.start_at,
@@ -95,6 +95,7 @@ def create_reservation(
 
 # 予約作成（管理者用）
 def create_admin_reservation(
+        pattern_name: str,
         data1: reserve_schema.ReservationCreate1,
         data2: reserve_schema.ReservationCreate2,
         end_at: datetime,
@@ -108,6 +109,7 @@ def create_admin_reservation(
         name = data2.name,
         email = data2.email,
         phone_number = data2.phone_number,
+        pattern_name = pattern_name,
         people = data1.people,
         start_at = data2.start_at,
         end_at = end_at

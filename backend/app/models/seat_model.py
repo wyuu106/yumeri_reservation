@@ -18,7 +18,7 @@ class SeatPattern(Base):
     __tablename__ = 'seat_patterns'
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
-    name: Mapped[str] = mapped_column(String)
+    name: Mapped[str] = mapped_column(String, unique=True)
     seat_type: Mapped[str] = mapped_column(String)
     is_private: Mapped[bool] = mapped_column(Boolean)
     min_people: Mapped[int] = mapped_column(Integer)

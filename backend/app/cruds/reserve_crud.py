@@ -2,7 +2,7 @@ from sqlalchemy.orm import Session
 from sqlalchemy import select
 from fastapi import Response, HTTPException, status
 from datetime import date, datetime, time, timedelta
-from app.models import reserve_model
+from app.models import reserve_model, seat_model
 from app.schemas import reserve_schema
 from app.utils.seat_util import get_candidate_patterns, get_available_patterns, assign_pattern
 
@@ -74,13 +74,14 @@ def create_reservation(
         end_at = data2.start_at + timedelta(hours=2, minutes=30)
 
     # 選ばれた時間で席を割り当てる
-    pattern_name = assign_pattern(data1, data2.start_at, end_at, db)
+    pattern = assign_pattern(data1, data2.start_at, end_at, db)
 
     db_reservation = reserve_model.Reservation(
         name = data2.name,
         email = data2.email,
         phone_number = data2.phone_number,
-        pattern_name = pattern_name,
+        pattern_id = pattern.id,
+        pattern_name = pattern.name,
         people = data1.people,
         kids = data1.kids,
         start_at = data2.start_at,
@@ -105,12 +106,19 @@ def create_admin_reservation(
     if data2.name is None:
         raise HTTPException(status_code=400, detail="予約名が未入力です")
     
+    stmt = select(seat_model.SeatPattern).where(
+        seat_model.SeatPattern.name == pattern_name
+    )
+    db_pattern = db.execute(stmt).scalar_one_or_none()
+    
     db_reservation = reserve_model.Reservation(
         name = data2.name,
         email = data2.email,
         phone_number = data2.phone_number,
-        pattern_name = pattern_name,
+        pattern_id = db_pattern.id,
+        pattern_name = db_pattern.name,
         people = data1.people,
+        kids = data1.kids,
         start_at = data2.start_at,
         end_at = end_at
     )
@@ -174,7 +182,7 @@ def get_reservations(date: date, db: Session) -> list[reserve_schema.Reservation
     return db_reservations
 
 # 該当するidの予約取得（管理者用）
-def get_reservation(reservation_id: str, db: Session) -> reserve_model.Reservation:
+def get_reservation(reservation_id: str, db: Session) -> reserve_schema.ReservationData:
     stmt = select(reserve_model.Reservation).where(
         reserve_model.Reservation.id == reservation_id
     )

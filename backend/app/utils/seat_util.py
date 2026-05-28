@@ -85,4 +85,4 @@ def assign_pattern(
     if not available_patterns:
         raise HTTPException(status_code=400, detail="予約可能な席がありません")
 
-    return available_patterns[0].name
+    return available_patterns[0]

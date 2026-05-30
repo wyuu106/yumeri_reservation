@@ -10,7 +10,7 @@ from app.utils.auth import get_current_admin
 router = APIRouter()
 
 # ユーザー登録
-@router.post('/register', response_model = admin_schema.AdminCreateResponse)
+@router.post('/admin/register', response_model = admin_schema.AdminCreateResponse)
 def create_admin(
     admin: admin_schema.AdminCreate,
     db: Session = Depends(get_db),
@@ -19,7 +19,7 @@ def create_admin(
     return admin_crud.create_admin(admin, db)
 
 # ユーザー一覧
-@router.get('/admins', response_model = list[admin_schema.AdminCreateResponse])
+@router.get('/admin/admins', response_model = list[admin_schema.AdminCreateResponse])
 def get_admins(
     db: Session = Depends(get_db),
     current_admin: admin_model.Admin = Depends(get_current_admin)
@@ -32,7 +32,7 @@ def login(form_data: OAuth2PasswordRequestForm = Depends(), db: Session = Depend
     return admin_crud.login(form_data, db)
 
 # ユーザー削除
-@router.delete('/admins/me')
+@router.delete('/admin/delete')
 def delete_admin(
     current_admin: admin_model.Admin = Depends(get_current_admin),
     db: Session = Depends(get_db),

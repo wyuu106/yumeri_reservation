@@ -1,5 +1,5 @@
 from pydantic import BaseModel, EmailStr
-from datetime import datetime
+from datetime import datetime, ConfigDict
 
 # 予約作成の入力データ１
 class ReservationCreate1(BaseModel):
@@ -9,6 +9,7 @@ class ReservationCreate1(BaseModel):
     is_private: bool
 
 class AvailabilityResponse(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
     time: str
     available: bool
 
@@ -22,6 +23,7 @@ class ReservationCreate2(BaseModel):
 
 # ユーザー用の予約情報
 class ReservationCreateResponse(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
     id: str
     name: str
     people: int
@@ -29,6 +31,7 @@ class ReservationCreateResponse(BaseModel):
 
 # 店用の予約情報
 class ReservationData(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
     id: str
     pattern_name: str
     name: str

@@ -1,3 +1,5 @@
+import os
+from dotenv import load_dotenv
 from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
 from fastapi.security import OAuth2PasswordRequestForm
@@ -7,15 +9,21 @@ from app.schemas import admin_schema
 from app.cruds import admin_crud
 from app.utils.auth import get_current_admin
 
+# .envを読み込む
+load_dotenv()
+
 router = APIRouter()
 
 # ユーザー登録
 @router.post('/admin/register', response_model = admin_schema.AdminCreateResponse)
 def create_admin(
-    admin: admin_schema.AdminCreate,
     db: Session = Depends(get_db),
     current_admin: admin_model.Admin = Depends(get_current_admin)
     ):
+    admin = admin_schema.AdminCreate(
+        name = os.getenv("ADMIN_NAME"),
+        password = os.getenv("PASSWORD")
+    )
     return admin_crud.create_admin(admin, db)
 
 # ユーザー一覧

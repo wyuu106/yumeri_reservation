@@ -1,5 +1,5 @@
-from pydantic import BaseModel, EmailStr
-from datetime import datetime, ConfigDict
+from pydantic import BaseModel, EmailStr, ConfigDict
+from datetime import datetime
 
 # 予約作成の入力データ１
 class ReservationCreate1(BaseModel):

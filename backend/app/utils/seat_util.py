@@ -4,13 +4,13 @@ from sqlalchemy.orm import Session
 from fastapi import HTTPException
 from app.models.reserve_model import Reservation
 from app.models.seat_model import SeatPattern, PatternMember
-from app.schemas.reserve_schema import ReservationCreate1
+from app.schemas.reserve_schema import AvailabilityQuery
 
 # 予約条件に合った席パターンを取得
 def get_candidate_patterns(
-        data: ReservationCreate1,
+        data: AvailabilityQuery,
         db: Session
-        ):
+) -> list[SeatPattern]:
     
     # 人数から席の候補を取得
     stmt = select(SeatPattern).where(
@@ -72,7 +72,7 @@ def get_available_patterns(
     return available_patterns
 
 def assign_pattern(
-        data: ReservationCreate1,
+        data: AvailabilityQuery,
         start_at: datetime,
         end_at: datetime,
         db: Session

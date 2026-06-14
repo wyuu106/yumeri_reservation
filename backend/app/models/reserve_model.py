@@ -1,5 +1,5 @@
 from sqlalchemy.orm import Mapped, mapped_column
-from sqlalchemy import String, Integer, DateTime, ForeignKey
+from sqlalchemy import String, Integer, Boolean, DateTime, ForeignKey
 from typing import Optional
 from uuid import uuid4
 from datetime import datetime
@@ -20,7 +20,9 @@ class Reservation(Base):
 
     people: Mapped[int] = mapped_column(Integer)
     kids: Mapped[int] = mapped_column(Integer)
+    seat_type: Mapped[str] = mapped_column(String)
     course: Mapped[str] = mapped_column(String)
+    is_private: Mapped[bool] = mapped_column(Boolean)
     
     start_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
     end_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))

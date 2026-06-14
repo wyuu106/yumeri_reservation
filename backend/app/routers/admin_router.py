@@ -18,7 +18,7 @@ router = APIRouter()
 @router.post('/admin/register', response_model = admin_schema.AdminCreateResponse)
 def create_admin(
     db: Session = Depends(get_db),
-    current_admin: admin_model.Admin = Depends(get_current_admin)
+    #current_admin: admin_model.Admin = Depends(get_current_admin)
     ):
     admin = admin_schema.AdminCreate(
         name = os.getenv("ADMIN_NAME"),
@@ -49,7 +49,7 @@ def delete_admin(
     return admin_crud.delete_admin(admin_id, db)
 
 # 休業日作成
-@router.post('/closed_date', response_mode = admin_schema.ClosedDateCreateResponse)
+@router.post('/closed_date', response_model = admin_schema.ClosedDateCreateResponse)
 def create_closed_date(
     closed_date: admin_schema.ClosedDateCreate,
     db: Session = Depends(get_db),
@@ -57,11 +57,9 @@ def create_closed_date(
 ):
     return admin_crud.create_closed_date(closed_date, db)
 
+# 休業日一覧取得
 @router.get('/closed_dates', response_model = list[admin_schema.ClosedDateCreateResponse])
-def get_closed_dates(
-    db: Session = Depends(get_db),
-    current_admin: admin_model.Admin = Depends(get_current_admin)
-):
+def get_closed_dates(db: Session = Depends(get_db)):
     return admin_crud.get_closed_dates(db)
 
 # 休業日削除

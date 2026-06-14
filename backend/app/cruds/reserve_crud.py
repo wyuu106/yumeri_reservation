@@ -9,15 +9,17 @@ from app.utils.seat_util import get_candidate_patterns, get_available_patterns, 
 # 人数、時間、席の条件　から　予約可能な時間帯を返す
 def get_availability(
         data: reserve_schema.AvailabilityQuery,
-        date: date,
         db: Session
         ) -> list[reserve_schema.AvailabilityQueryResponse]:
+    
+    if data.people > 22:
+        raise HTTPException(status_code=400, detail="人数オーバーです")
     
     # 予約条件に合った席パターンを取得
     patterns = get_candidate_patterns(data, db)
 
-    day_start = datetime.combine(date, time(18, 0))
-    day_end = datetime.combine(date, time(22, 0))
+    day_start = datetime.combine(data.reservation_date, time(18, 0))
+    day_end = datetime.combine(data.reservation_date, time(22, 0))
 
     if data.people <= 2:
         seat_time = timedelta(hours=2)
@@ -42,7 +44,7 @@ def get_availability(
         )
         
         results.append(
-            reserve_schema.AvailabilityResponse(
+            reserve_schema.AvailabilityQueryResponse(
                 time = start_at.strftime("%H:%M"),
                 available = len(available_patterns) > 0 # 使える席が１つでもあればTrue
             )
@@ -83,7 +85,9 @@ def create_reservation(
         pattern_name = pattern.name,
         people = data.people,
         kids = data.kids,
-        counrse = data.course,
+        seat_type = data.seat_type,
+        course = data.course,
+        is_private = data.is_private,
         start_at = data.start_at,
         end_at = end_at
     )
@@ -96,7 +100,7 @@ def create_reservation(
 
 # 予約作成（管理者用）
 def create_admin_reservation(
-        pattern_name: str,
+        pattern_id: int,
         data: reserve_schema.ReservationCreate,
         end_at: datetime,
         db: Session
@@ -106,9 +110,12 @@ def create_admin_reservation(
         raise HTTPException(status_code=400, detail="予約名が未入力です")
     
     stmt = select(seat_model.SeatPattern).where(
-        seat_model.SeatPattern.name == pattern_name
+        seat_model.SeatPattern.id == pattern_id
     )
     db_pattern = db.execute(stmt).scalar_one_or_none()
+
+    if not db_pattern:
+        raise HTTPException(status_code=404, detail="該当する席が見つかりません")
     
     db_reservation = reserve_model.Reservation(
         name = data.name,

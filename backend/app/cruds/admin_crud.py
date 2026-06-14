@@ -2,6 +2,9 @@ from sqlalchemy.orm import Session
 from sqlalchemy import select
 from fastapi import Response, HTTPException, status
 from fastapi.security import OAuth2PasswordRequestForm
+from datetime import date, timedelta
+from dateutil.relativedelta import relativedelta
+import calendar
 from app.models import admin_model
 from app.schemas import admin_schema
 from app.utils.auth import hash_password, verify_password, create_access_token
@@ -53,6 +56,64 @@ def delete_admin(id: str, db: Session):
         raise HTTPException(status_code=404, detail="該当するユーザーが見つかりませんでした")
     
     db.delete(db_admin)
+    db.commit()
+
+    return Response(status_code=status.HTTP_204_NO_CONTENT)
+
+# 休業日作成
+def create_closed_date(
+        date: admin_schema.ClosedDateCreate,
+        db: Session
+) -> admin_schema.ClosedDateCreateResponse:
+    
+    exist_date = db.execute(select(admin_model.ClosedDate).where(
+        admin_model.ClosedDate.closed_date == date
+    )).scalar_one_or_none()
+
+    if not exist_date:
+        raise HTTPException(status_code=400, detail='既に登録されています')
+    
+    db_date = admin_model.ClosedDate(closed_date = date)
+
+    db.add(db_date)
+    db.commit()
+    db.refresh(db_date)
+
+    return db_date
+
+# 休業日一覧
+def get_closed_dates(db: Session) -> list[admin_schema.ClosedDateCreateResponse]:
+    today = date.today()
+
+    # 来月を取得
+    next_month = today + relativedelta(months=1)
+
+    # 来月末の日付を取得
+    # calendaer.monthrange(年, 月) = (その月の１日の曜日, その月の最終日)
+    end_day = calendar.monthrange(next_month.year, next_month.month)[1]
+
+    # 来月末をdate型にする
+    next_month_end = date(next_month.year, next_month.month, end_day)
+
+    stmt = select(admin_model.ClosedDate).where(
+        admin_model.ClosedDate.closed_date >= today + timedelta(days=1),
+        admin_model.ClosedDate.closed_date <= next_month_end
+    )
+    db_dates = db.execute(stmt).scalars().all()
+
+    return db_dates
+
+# 休業日削除
+def delete_closed_date(closed_id: int, db: Session):
+    stmt = select(admin_model.ClosedDate).where(
+        admin_model.ClosedDate.id == closed_id
+    )
+    db_date = db.execute(stmt).scalar_one_or_none()
+
+    if not db_date:
+        raise HTTPException(status_code=404, detail='該当する休業日が見つかりませんでした')
+    
+    db.delete(db_date)
     db.commit()
 
     return Response(status_code=status.HTTP_204_NO_CONTENT)

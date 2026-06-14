@@ -10,19 +10,21 @@ from app.models import admin_model
 router = APIRouter()
 
 # 人数、時間、席の条件　から　予約可能な時間帯を返す
-@router.get('/availability', response_model = list[reserve_schema.AvailabilityResponse])
+@router.get('/availability', response_model=list[reserve_schema.AvailabilityQueryResponse])
 def get_availability(
     people: int,
     kids: int,
     seat_type: str,
+    course: str,
     is_private: bool,
     date: date,
     db: Session = Depends(get_db)
     ):
-    data = reserve_schema.ReservationCreate1(
+    data = reserve_schema.AvailabilityQuery(
         people = people,
         kids = kids,
         seat_type = seat_type,
+        course = course,
         is_private = is_private
     )
     return reserve_crud.get_availability(data, date, db)
@@ -30,11 +32,10 @@ def get_availability(
 # 予約作成（ユーザー）
 @router.post('/reservations', response_model = reserve_schema.ReservationCreateResponse)
 def create_reservation(
-    data1: reserve_schema.ReservationCreate1,
-    data2: reserve_schema.ReservationCreate2,
+    data: reserve_schema.ReservationCreate,
     db: Session = Depends(get_db)
     ):
-    return reserve_crud.create_reservation(data1, data2, db)
+    return reserve_crud.create_reservation(data, db)
 
 # 予約作成（管理者用）
 @router.post('/admin/reservations', response_model = reserve_schema.ReservationData)

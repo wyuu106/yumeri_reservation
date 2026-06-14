@@ -20,5 +20,7 @@ class Reservation(Base):
 
     people: Mapped[int] = mapped_column(Integer)
     kids: Mapped[int] = mapped_column(Integer)
+    course: Mapped[str] = mapped_column(String)
+    
     start_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
     end_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))

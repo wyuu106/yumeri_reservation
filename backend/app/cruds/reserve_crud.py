@@ -8,10 +8,10 @@ from app.utils.seat_util import get_candidate_patterns, get_available_patterns, 
 
 # 人数、時間、席の条件　から　予約可能な時間帯を返す
 def get_availability(
-        data: reserve_schema.ReservationCreate1,
+        data: reserve_schema.AvailabilityQuery,
         date: date,
         db: Session
-        ) -> list[reserve_schema.AvailabilityResponse]:
+        ) -> list[reserve_schema.AvailabilityQueryResponse]:
     
     # 予約条件に合った席パターンを取得
     patterns = get_candidate_patterns(data, db)
@@ -54,37 +54,37 @@ def get_availability(
 
 # 予約作成（ユーザー）
 def create_reservation(
-        data1: reserve_schema.ReservationCreate1,
-        data2: reserve_schema.ReservationCreate2,
+        data: reserve_schema.ReservationCreate,
         db: Session
         ) -> reserve_schema.ReservationCreateResponse:
     
-    if data2.name is None:
+    if data.name is None:
         raise HTTPException(status_code=400, detail="予約名が未入力です")
 
-    if data2.email is None:
+    if data.email is None:
         raise HTTPException(status_code=400, detail="メールアドレスが未入力です")
 
-    if data2.phone_number is None:
+    if data.phone_number is None:
         raise HTTPException(status_code=400, detail="電話番号が未入力です")
     
-    if data1.people <= 2:
-        end_at = data2.start_at + timedelta(hours=2)
+    if data.people <= 2:
+        end_at = data.start_at + timedelta(hours=2)
     else:
-        end_at = data2.start_at + timedelta(hours=2, minutes=30)
+        end_at = data.start_at + timedelta(hours=2, minutes=30)
 
     # 選ばれた時間で席を割り当てる
-    pattern = assign_pattern(data1, data2.start_at, end_at, db)
+    pattern = assign_pattern(data, data.start_at, end_at, db)
 
     db_reservation = reserve_model.Reservation(
-        name = data2.name,
-        email = data2.email,
-        phone_number = data2.phone_number,
+        name = data.name,
+        email = data.email,
+        phone_number = data.phone_number,
         pattern_id = pattern.id,
         pattern_name = pattern.name,
-        people = data1.people,
-        kids = data1.kids,
-        start_at = data2.start_at,
+        people = data.people,
+        kids = data.kids,
+        counrse = data.course,
+        start_at = data.start_at,
         end_at = end_at
     )
 
@@ -97,13 +97,12 @@ def create_reservation(
 # 予約作成（管理者用）
 def create_admin_reservation(
         pattern_name: str,
-        data1: reserve_schema.ReservationCreate1,
-        data2: reserve_schema.ReservationCreate2,
+        data: reserve_schema.ReservationCreate,
         end_at: datetime,
         db: Session
         ) -> reserve_schema.ReservationData:
     
-    if data2.name is None:
+    if data.name is None:
         raise HTTPException(status_code=400, detail="予約名が未入力です")
     
     stmt = select(seat_model.SeatPattern).where(
@@ -112,14 +111,15 @@ def create_admin_reservation(
     db_pattern = db.execute(stmt).scalar_one_or_none()
     
     db_reservation = reserve_model.Reservation(
-        name = data2.name,
-        email = data2.email,
-        phone_number = data2.phone_number,
+        name = data.name,
+        email = data.email,
+        phone_number = data.phone_number,
         pattern_id = db_pattern.id,
         pattern_name = db_pattern.name,
-        people = data1.people,
-        kids = data1.kids,
-        start_at = data2.start_at,
+        people = data.people,
+        kids = data.kids,
+        course = data.course,
+        start_at = data.start_at,
         end_at = end_at
     )
 

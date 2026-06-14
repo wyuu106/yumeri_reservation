@@ -1,11 +1,16 @@
 // 予約ページ
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import axios from "axios";
+import { getErrorMessage } from "../utils/error_util";
+import DatePicker from "react-datepicker";
+import "react-datepicker/dist/react-datepicker.css";
 
 function Reservation() {
-  const [date, setDate] = useState("");
-  const [people, setPeople] = useState(1);
+  const [closedDates, setClosedDates] = useState([]);
+  const [date, setDate] = useState(null);
+  
+  const [people, setPeople] = useState("1");
   const [kids, setKids] = useState(0);
   const [seatType, setSeatType] = useState("any");
   const [course, setCourse] = useState("alacarte");
@@ -20,26 +25,74 @@ function Reservation() {
 
   const [loading, setLoading] = useState(false);
 
+  // 今日 から 翌月末 を計算
+  const today = new Date();
+  const maxDate = new Date(
+    today.getFullYear(),
+    today.getMonth() + 2,
+    0
+  );
+
+  // 休業日一覧取得
+  const getClosedDates = async () => {
+    try {
+      const res = await axios.get(
+        "http://localhost:8000/closed_dates"
+      );
+
+      setClosedDates(
+        res.data.map((d) => d.date)
+      );
+
+    } catch (error) {
+      console.log(error);
+      alert(getErrorMessage(error));
+    }
+  };
+
+  // getClosedDatesを実行
+  useEffect(() => {
+    getClosedDates();
+  }, []);
+
+  // closedDateの型変換
+  const closedDateObjects = closedDates.map(
+    (d) => new Date(d)
+  );
+
   // 空き時間取得
   const getAvailability = async () => {
+
+    if (people === "" || Number(people) < 1) {
+      alert("人数を入力してください");
+      return;
+    }
+
+    if (people === "" || Number(people) < 1) {
+      alert("人数を入力してください");
+      return;
+    }
+
     setTimes([]);
     setSelectedTime(null);
 
     try {
       const res = await axios.get("http://localhost:8000/availability", {
         params: {
-          date,
-          people,
+          reservation_date: date.toISOString().split("T")[0],
+          people: Number(people),
           kids,
           seat_type: seatType,
-          course: people >= 4 ? course : "alacarte",
-          is_private: people >= 7 && isPrivate,
+          course: Number(people) >= 4 ? course : "alacarte",
+          is_private: Number(people) >= 7 && isPrivate,
         },
       });
 
       setTimes(res.data);
+
     } catch (error) {
-      alert(error.response?.data?.detail || "取得失敗");
+      console.log(error);
+      alert(getErrorMessage(error));
     }
   };
 
@@ -56,21 +109,22 @@ function Reservation() {
       await axios.post("http://localhost:8000/reservations", {
         name,
         email,
-        phone_number: phoneNumber,
+        phone_number,
 
-        people,
+        people: Number(people),
         kids,
         seat_type: seatType,
-        course: people >= 4 ? course : "alacarte",
-        is_private: people >= 7 && isPrivate,
+        course: Number(people) >= 4 ? course : "alacarte",
+        is_private: Number(people) >= 7 && isPrivate,
+        
         start_at: selectedTime.start_at,
       });
 
       alert("予約完了！");
+      
     } catch (error) {
-      alert(error.response?.data?.detail || "予約失敗");
-    } finally {
-      setLoading(false);
+      console.log(error);
+      alert(getErrorMessage(error));
     }
   };
 
@@ -81,10 +135,14 @@ function Reservation() {
       {/* 日付 */}
       <div>
         <p>日付</p>
-        <input
-          type="date"
-          value={date}
-          onChange={(e) => setDate(e.target.value)}
+
+        <DatePicker
+          selected={date}
+          onChange={(d) => setDate(d)}
+          minDate={today}
+          maxDate={maxDate}
+          excludeDates={closedDateObjects}
+          dateFormat="yyyy-MM-dd"
         />
       </div>
 
@@ -95,7 +153,7 @@ function Reservation() {
           type="number"
           min={1}
           value={people}
-          onChange={(e) => setPeople(Number(e.target.value) || 1)}
+          onChange={(e) => setPeople(e.target.value)}
         />
       </div>
 
@@ -122,7 +180,7 @@ function Reservation() {
       </div>
 
       {/* コース */}
-      {people >= 4 && (
+      {Number(people) >= 4 && (
         <div>
           <p>コース</p>
           <select value={course} onChange={(e) => setCourse(e.target.value)}>
@@ -137,7 +195,7 @@ function Reservation() {
       )}
 
       {/* 個室 */}
-      {people >= 7 && (
+      {Number(people) >= 7 && (
         <div>
           <label>
             <input

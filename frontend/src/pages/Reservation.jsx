@@ -89,6 +89,7 @@ function Reservation() {
       });
 
       setTimes(res.data);
+      console.log(times[0]);
 
     } catch (error) {
       console.log(error);
@@ -109,15 +110,16 @@ function Reservation() {
       await axios.post("http://localhost:8000/reservations", {
         name,
         email,
-        phone_number,
+        phone_number: phoneNumber,
 
         people: Number(people),
         kids,
         seat_type: seatType,
         course: Number(people) >= 4 ? course : "alacarte",
         is_private: Number(people) >= 7 && isPrivate,
-        
-        start_at: selectedTime.start_at,
+
+        // 選択肢した日付と時間をdatetimeに変換して送る
+        start_at: `${date}T${selectedTime.time}:00`,
       });
 
       alert("予約完了！");
@@ -174,8 +176,8 @@ function Reservation() {
         <select value={seatType} onChange={(e) => setSeatType(e.target.value)}>
           <option value="any">指定なし</option>
           <option value="counter">カウンター</option>
-          <option value="zashiki">座敷</option>
           <option value="horigotatsu">掘りごたつ</option>
+          <option value="tatami">座敷</option>
         </select>
       </div>
 
@@ -213,39 +215,41 @@ function Reservation() {
       <hr />
 
       {/* 空き時間 */}
-      <h2>空き時間</h2>
+      <table
+        border="1"
+        style={{
+          width: "100%",
+          borderCollapse: "collapse",
+        }}
+      >
+        <thead>
+          <tr>
+            <th style={{ padding: "8px" }}>
+              開始
+            </th>
+          </tr>
+        </thead>
 
-      {times.length === 0 ? (
-        <p>空いている席がありません</p>
-      ) : (
-        <table border="1">
-          <thead>
-            <tr>
-              <th>開始</th>
-              <th>終了</th>
+        <tbody>
+          {times.map((t, i) => (
+            <tr
+              key={i}
+              onClick={() => setSelectedTime(t)}
+              style={{
+                cursor: "pointer",
+                background:
+                  selectedTime?.start_at === t.start_at
+                    ? "#ddd"
+                    : "white",
+              }}
+            >
+              <td style={{ padding: "8px" }}>
+                {t.start_at}
+              </td>
             </tr>
-          </thead>
-
-          <tbody>
-            {times.map((t, i) => (
-              <tr
-                key={i}
-                onClick={() => setSelectedTime(t)}
-                style={{
-                  cursor: "pointer",
-                  background:
-                    selectedTime?.start_at === t.start_at
-                      ? "#ddd"
-                      : "white",
-                }}
-              >
-                <td>{t.start_at}</td>
-                <td>{t.end_at}</td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      )}
+          ))}
+        </tbody>
+      </table>
 
       {/* 予約入力 */}
       {selectedTime && (

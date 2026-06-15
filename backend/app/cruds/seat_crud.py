@@ -67,8 +67,8 @@ def get_patterns(db: Session) -> list[seat_schema.SeatPatternCreateResponse]:
 # 席パターンに使われている席取得
 def get_members(pattern_id: int, db: Session) -> list[seat_schema.SeatCreateResponse]:
     stmt = select(seat_model.Seat).join(
-        seat_model.SeatPattern,
-        seat_model.Seat.id == seat_model.SeatPattern.seat_id
+        seat_model.PatternMember,
+        seat_model.Seat.id == seat_model.PatternMember.seat_id
     ).where(
         seat_model.PatternMember.pattern_id == pattern_id
     )

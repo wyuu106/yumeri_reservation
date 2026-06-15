@@ -45,7 +45,7 @@ def get_availability(
         
         results.append(
             reserve_schema.AvailabilityQueryResponse(
-                time = start_at.strftime("%H:%M"),
+                start_at = start_at.strftime("%H:%M"),
                 available = len(available_patterns) > 0 # 使える席が１つでもあればTrue
             )
         )

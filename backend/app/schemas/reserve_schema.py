@@ -12,7 +12,7 @@ class AvailabilityQuery(BaseModel):
 
 class AvailabilityQueryResponse(BaseModel):
     model_config = ConfigDict(from_attributes=True)
-    time: str
+    start_at: str
     available: bool
 
 # 予約作成の入力データ2

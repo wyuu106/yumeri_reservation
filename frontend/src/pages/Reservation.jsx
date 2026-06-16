@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import axios from "axios";
+import { useNavigate } from "react-router-dom";
 import { getErrorMessage } from "../utils/error_util";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
@@ -24,6 +25,8 @@ function Reservation() {
   const [phoneNumber, setPhoneNumber] = useState("");
 
   const [loading, setLoading] = useState(false);
+
+  const navigate = useNavigate();
 
   // 今日 から 翌月末 を計算
   const today = new Date();
@@ -104,6 +107,8 @@ function Reservation() {
       return;
     }
 
+    const formattedDate = new Date(date).toISOString().split("T")[0];
+
     setLoading(true);
 
     try {
@@ -119,10 +124,12 @@ function Reservation() {
         is_private: Number(people) >= 7 && isPrivate,
 
         // 選択肢した日付と時間をdatetimeに変換して送る
-        start_at: `${date}T${selectedTime.time}:00`,
+        start_at: `${formattedDate}T${selectedTime.start_at}:00`,
       });
 
       alert("予約完了！");
+
+      window.location.reload(); // 予約完了 -> ページリロード
       
     } catch (error) {
       console.log(error);
@@ -251,6 +258,8 @@ function Reservation() {
         </tbody>
       </table>
 
+      <br />
+
       {/* 予約入力 */}
       {selectedTime && (
         <div>
@@ -262,17 +271,23 @@ function Reservation() {
             onChange={(e) => setName(e.target.value)}
           />
 
+          <br />
+
           <input
             placeholder="メール"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
           />
 
+          <br />
+
           <input
             placeholder="電話番号"
             value={phoneNumber}
             onChange={(e) => setPhoneNumber(e.target.value)}
           />
+
+          <br />
 
           <button onClick={createReservation} disabled={loading}>
             {loading ? "予約中..." : "この時間で予約"}

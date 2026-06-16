@@ -2,6 +2,7 @@ from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
 from datetime import date, datetime
 from app.db import get_db
+from app.utils.mail_util import send_reservation_mail
 from app.schemas import reserve_schema
 from app.cruds import reserve_crud
 from app.utils.auth import get_current_admin
@@ -32,11 +33,21 @@ def get_availability(
 
 # 予約作成（ユーザー）
 @router.post('/reservations', response_model = reserve_schema.ReservationCreateResponse)
-def create_reservation(
+async def create_reservation(
     data: reserve_schema.ReservationCreate,
     db: Session = Depends(get_db)
     ):
-    return reserve_crud.create_reservation(data, db)
+    reservation = reserve_crud.create_reservation(data, db)
+
+    await send_reservation_mail(
+        email = data.email,
+        name = data.name,
+        start_at = data.start_at,
+        people = data.people,
+        kids = data.kids
+    )
+
+    return reservation
 
 # 予約作成（管理者用）
 @router.post('/admin/reservations', response_model = reserve_schema.ReservationData)

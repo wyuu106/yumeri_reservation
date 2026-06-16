@@ -31,6 +31,37 @@ def get_candidate_patterns(
 
     return patterns
 
+# コンフリクト判定
+def get_conflict(
+        pattern_id: int,
+        start_at: datetime,
+        end_at: datetime,
+        db: Session
+):
+    # その席パターンで使われている席（単体）を全て取得
+    stmt1 = select(PatternMember.seat_id).where(
+            PatternMember.pattern_id == pattern_id
+        )
+    seat_ids = db.execute(stmt1).scalars().all()
+
+    # その席が同じ時間帯で他の予約で使われていないか判定
+    stmt2 = (
+        select(PatternMember)
+        .join(
+            Reservation,
+            Reservation.pattern_id == PatternMember.pattern_id
+        )
+        .where(
+            PatternMember.seat_id.in_(seat_ids),
+
+            Reservation.start_at < end_at,
+            Reservation.end_at > start_at
+        )
+    )
+    conflict = db.execute(stmt2).first()
+
+    return conflict
+
 # patternsの中から、その時間帯に使える席パターンを返す
 def get_available_patterns(
         patterns: list[SeatPattern],
@@ -43,27 +74,7 @@ def get_available_patterns(
 
     # 使用可能な席パターンを１つずつ判定
     for pattern in patterns:
-        # その席パターンで使われている席（単体）を全て取得
-        stmt1 = select(PatternMember.seat_id).where(
-                PatternMember.pattern_id == pattern.id
-            )
-        seat_ids = db.execute(stmt1).scalars().all()
-
-        # その席が同じ時間帯で他の予約で使われていないか判定
-        stmt2 = (
-            select(PatternMember)
-            .join(
-                Reservation,
-                Reservation.pattern_id == PatternMember.pattern_id
-            )
-            .where(
-                PatternMember.seat_id.in_(seat_ids),
-
-                Reservation.start_at < end_at,
-                Reservation.end_at > start_at
-            )
-        )
-        conflict = db.execute(stmt2).first()
+        conflict = get_conflict(pattern.id, start_at, end_at, db)
 
         # 衝突してなければその席は使える
         if conflict is None:
@@ -71,6 +82,7 @@ def get_available_patterns(
 
     return available_patterns
 
+# 席の割り当て
 def assign_pattern(
         data: AvailabilityQuery,
         start_at: datetime,

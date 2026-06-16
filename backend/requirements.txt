@@ -9,3 +9,4 @@ python-jose
 python-multipart
 pydantic[email]
 python-dateutil
+fastapi-mail

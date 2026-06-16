@@ -4,7 +4,12 @@ from fastapi import Response, HTTPException, status
 from datetime import date, datetime, time, timedelta
 from app.models import reserve_model, seat_model
 from app.schemas import reserve_schema
-from app.utils.seat_util import get_candidate_patterns, get_available_patterns, assign_pattern
+from app.utils.seat_util import(
+    get_candidate_patterns,
+    get_conflict,
+    get_available_patterns,
+    assign_pattern
+)
 
 # 人数、時間、席の条件　から　予約可能な時間帯を返す
 def get_availability(
@@ -117,6 +122,9 @@ def create_admin_reservation(
     if not db_pattern:
         raise HTTPException(status_code=404, detail="該当する席が見つかりません")
     
+    if get_conflict(pattern_id, data.start_at, end_at, db):
+        raise HTTPException(status_code=400, detail="予約時間が被っています")
+    
     db_reservation = reserve_model.Reservation(
         name = data.name,
         email = data.email,
@@ -148,8 +156,16 @@ def update_reservation(
     )
     db_reservation = db.execute(stmt).scalar_one_or_none()
 
+    if not db_reservation:
+        raise HTTPException(status_code=404, detail='該当する予約が見つかりません')
+
+    db_reservation.name = new_data.name
     db_reservation.pattern_id = new_data.pattern_id
     db_reservation.people = new_data.people
+    db_reservation.kids = new_data.kids
+    db_reservation.seat_type = new_data.seat_type
+    db_reservation.course = new_data.course
+    db_reservation.is_private = new_data.is_private
     db_reservation.start_at = new_data.start_at
     db_reservation.end_at = new_data.end_at
 
@@ -194,6 +210,9 @@ def get_reservation(reservation_id: str, db: Session) -> reserve_schema.Reservat
         reserve_model.Reservation.id == reservation_id
     )
     db_reservation = db.execute(stmt).scalar_one_or_none()
+
+    if not db_reservation:
+        raise HTTPException(status_code=404, detail="該当する予約が見つかりません")
 
     return db_reservation
 

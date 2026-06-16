@@ -34,7 +34,9 @@ class ReservationCreateResponse(BaseModel):
     model_config = ConfigDict(from_attributes=True)
     id: str
     name: str
+    email: str
     people: int
+    kids: int
     course: str
     start_at: datetime
 
@@ -42,15 +44,24 @@ class ReservationCreateResponse(BaseModel):
 class ReservationData(BaseModel):
     model_config = ConfigDict(from_attributes=True)
     id: str
-    pattern_name: str
     name: str
+    pattern_name: str
     people: int
+    kids: int
+    seat_type: str
+    course: str
+    is_private: bool
     start_at: datetime
     end_at: datetime
 
 # 予約変更の入力データ
 class ReservationUpdate(BaseModel):
+    name: str
     pattern_id: int
     people: int
+    kids: int
+    seat_type: str
+    course: str
+    is_private: bool
     start_at: datetime
     end_at: datetime

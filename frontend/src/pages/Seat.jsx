@@ -94,7 +94,15 @@ function Seat() {
       {seats.length === 0 ? (
         <p>席がありません</p>
       ) : (
-        <table border="1">
+        <table
+        border="1"
+        cellPadding="8"
+        style={{
+          margin: "0 auto",
+          borderCollapse: "collapse",
+          textAlign: "center",
+        }}
+      >
           <thead>
             <tr>
               <th>ID</th>
